@@ -2,9 +2,16 @@
 
 public sealed class License
 {
-    public required string Id { get; init; }
-    public required string Type { get; init; }
-    public DateOnly? ExpiredAt { get; init; }
-    public string? ParentId { get; init; }
-    public License? Parent { get; init; }
+    public string Id { get; set; }
+    public LicenseType? Type { get; set; }
+    public DateOnly? ExpiredAt { get; set; }
+    public string? Parent { get; set; }
+    public LicenseRelationshipType? ParentType { get; set; }
+
+    public enum LicenseRelationshipType
+    {
+        Converted,
+        Prolong,
+        Subscription
+    }
 }

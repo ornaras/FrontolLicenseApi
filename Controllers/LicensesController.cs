@@ -1,4 +1,5 @@
-﻿using FrontolLicenseApi.Models.Response;
+﻿using FrontolLicenseApi.Models;
+using FrontolLicenseApi.Models.Response;
 using FrontolLicenseApi.Services;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -36,6 +37,5 @@ public sealed class LicensesController : Controller
     }
 
     [HttpGet("types")]
-    public IEnumerable<string> GetTypes(ApplicationDbContext ctx) =>
-        ctx.Licenses.Select(l => l.Type).Distinct();
+    public IEnumerable<LicenseType> GetTypes(ApplicationDbContext ctx) => ctx.Types;
 }
