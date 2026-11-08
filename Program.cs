@@ -58,6 +58,11 @@ builder.Services.AddDbContext<ApplicationDbContext>(opts =>
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient(FrontolLicenseFetcher.ClientKey, c =>
+{
+    c.BaseAddress = new Uri("https://lk.frontol.ru");
+});
+builder.Services.AddHostedService<FrontolLicenseFetcher>();
 
 var app = builder.Build();
 
