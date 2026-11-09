@@ -6,7 +6,7 @@ namespace FrontolLicenseApi.Services;
 public sealed class ApplicationDbContext : DbContext
 {
     public DbSet<License> Licenses => Set<License>();
-    public DbSet<LicenseType> Types => Set<LicenseType>();
+    public DbSet<Product> Products => Set<Product>();
 
     public ApplicationDbContext(DbContextOptions opts) : base(opts)
     {
@@ -17,7 +17,10 @@ public sealed class ApplicationDbContext : DbContext
     {
         modelBuilder.Entity<License>(e =>
         {
-            e.HasOne(l => l.Type).WithMany(t => t.Licenses).HasForeignKey("Type");
+            e.HasOne(l => l.Product)
+                .WithMany(t => t.Licenses)
+                .HasForeignKey("ProductId");
+            e.HasKey(l => l.Code);
         });
         base.OnModelCreating(modelBuilder);
     }

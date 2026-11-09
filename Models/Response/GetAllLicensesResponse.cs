@@ -8,9 +8,9 @@ public readonly struct GetAllLicensesResponse
 
     public readonly struct LicenseData(License model)
     {
-        public string License { get; } = model.Id;
-        public string Type { get; } = model.Type;
+        public string License { get; } = model.Code;
+        public string? ProductId { get; } = model.Product?.Id;
         public DateOnly? ExpiredAt { get; } = model.ExpiredAt;
-        public string? BasedOn { get; } = model.ParentId;
+        public string? ParentCode { get; } = model.ParentCode;
     }
 }

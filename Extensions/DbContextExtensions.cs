@@ -9,14 +9,14 @@ public static class DbContextExtensions
     {
         public void UpsertLicense(License license)
         {
-            if (license.Id.Contains('*')) return;
-            var existing = ctx.Licenses.FirstOrDefault(l => l.Id == license.Id);
+            if (license.Code.Contains('*')) return;
+            var existing = ctx.Licenses.FirstOrDefault(l => l.Code == license.Code);
             if (existing is null) ctx.Licenses.Add(license);
             else
             {
-                if (license.Type is not null) existing.Type = license.Type;
+                if (license.Product is not null) existing.Product = license.Product;
                 if (license.ExpiredAt is not null) existing.ExpiredAt = license.ExpiredAt;
-                if (license.ParentId is not null) existing.ParentId = license.ParentId;
+                if (license.ParentCode is not null) existing.ParentCode = license.ParentCode;
             }
         }
     }

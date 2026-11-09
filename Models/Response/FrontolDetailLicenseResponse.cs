@@ -10,8 +10,8 @@ public readonly struct FrontolDetailLicenseResponse
     public readonly struct FrontolDetailLicense
     {
         [JsonPropertyName("lid")] public string LicenseId { get; init; }
-        [JsonPropertyName("pid")] public string Type { get; init; }
-        [JsonPropertyName("product_name")] public string TypeDisplayName { get; init; }
+        [JsonPropertyName("pid")] public string ProductId { get; init; }
+        [JsonPropertyName("product_name")] public string ProductDisplayName { get; init; }
         [JsonPropertyName("subscription_date")] public string? SubscriptionDateString { get; init; }
         public DateOnly? SubscriptionDate => DateOnly.TryParseExact(SubscriptionDateString, "dd.MM.yyyy", out var date) ? date : null;
         [JsonPropertyName("lic_exp")] public int? LeftDays { get; init; }

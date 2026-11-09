@@ -32,21 +32,21 @@ public sealed class FrontolLicenseFetcher
                     page = resp.NextPage;
                     foreach (var license in resp.Data)
                     {
-                        LicenseType? type;
+                        Product? product;
                         var detail = await GetDetailLicenseAsync(client, license.Id, license.Type, token, stoppingToken);
 
-                        type = context.Types.FirstOrDefault(t => t.Type == detail.Data.Type);
-                        if (type is null)
-                            context.Types.Add(type = new LicenseType
+                        product = context.Products.FirstOrDefault(t => t.Id == detail.Data.ProductId);
+                        if (product is null)
+                            context.Products.Add(product = new Product
                             {
-                                Type = detail.Data.Type,
-                                DisplayName = detail.Data.TypeDisplayName
+                                Id = detail.Data.ProductId,
+                                DisplayName = detail.Data.ProductDisplayName
                             });
 
                         context.UpsertLicense(new License
                         {
-                            Id = detail.Data.LicenseId,
-                            Type = type,
+                            Code = detail.Data.LicenseId,
+                            Product = product,
                             ExpiredAt = detail.Data.SubscriptionDate ?? (detail.Data.LeftDays is null ? null : DateOnly.FromDateTime(DateTime.Today.AddDays(detail.Data.LeftDays.Value)))
                         });
 
@@ -54,8 +54,8 @@ public sealed class FrontolLicenseFetcher
                         {
                             context.UpsertLicense(new License
                             {
-                                Id = baseFor.LicenseId,
-                                Parent = detail.Data.LicenseId,
+                                Code = baseFor.LicenseId,
+                                ParentCode = detail.Data.LicenseId,
                                 ParentType = License.LicenseRelationshipType.Converted
                             });
                         }
@@ -64,10 +64,10 @@ public sealed class FrontolLicenseFetcher
                         {
                             context.UpsertLicense(new License
                             {
-                                Id = prolong.LicenseId,
-                                Type = type,
+                                Code = prolong.LicenseId,
+                                Product = product,
                                 ExpiredAt = DateOnly.FromDateTime(prolong.OperationDateTime.AddDays(prolong.LeftDays)),
-                                Parent = detail.Data.LicenseId,
+                                ParentCode = detail.Data.LicenseId,
                                 ParentType = License.LicenseRelationshipType.Prolong
                             });
                         }
@@ -76,10 +76,10 @@ public sealed class FrontolLicenseFetcher
                         {
                             context.UpsertLicense(new License
                             {
-                                Id = sub.LicenseId,
-                                Type = type,
+                                Code = sub.LicenseId,
+                                Product = product,
                                 ExpiredAt = sub.FinalDate,
-                                Parent = detail.Data.LicenseId,
+                                ParentCode = detail.Data.LicenseId,
                                 ParentType = License.LicenseRelationshipType.Subscription
                             });
                         }

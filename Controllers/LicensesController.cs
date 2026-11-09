@@ -22,9 +22,9 @@ public sealed class LicensesController : Controller
         if (page < 0)
             return (BadRequest<ErrorResponse>)Results.BadRequest(new ErrorResponse("Значение page должно быть не отрицательным."));
 
-        IQueryable<Models.License> licenses = ctx.Licenses;
-        if (types is { Length: > 0 } _types)
-            licenses = licenses.Where(l => _types.Contains(l.Type));
+        IQueryable<License> licenses = ctx.Licenses;
+        if (products is { Length: > 0 } _products)
+            licenses = licenses.Where(l => l.Product != null && _products.Contains(l.Product.Id));
 
         return (Ok<GetAllLicensesResponse>)Results.Ok(new GetAllLicensesResponse
         {

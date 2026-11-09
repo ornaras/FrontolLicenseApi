@@ -2,10 +2,10 @@
 
 public sealed class License
 {
-    public string Id { get; set; }
-    public LicenseType? Type { get; set; }
+    public string Code { get; set; }
+    public Product? Product { get; set; }
     public DateOnly? ExpiredAt { get; set; }
-    public string? Parent { get; set; }
+    public string? ParentCode { get; set; }
     public LicenseRelationshipType? ParentType { get; set; }
 
     public enum LicenseRelationshipType
