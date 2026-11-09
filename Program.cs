@@ -8,6 +8,7 @@ using Npgsql;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.Configure<FrontolConfiguration>(builder.Configuration.GetSection(FrontolConfiguration.SectionName));
+builder.Services.Configure<LocalesConfiguration>(builder.Configuration.GetSection(LocalesConfiguration.SectionName));
 
 var cfgStorage = new StorageConfiguration();
 builder.Configuration.Bind(StorageConfiguration.SectionName, cfgStorage);
