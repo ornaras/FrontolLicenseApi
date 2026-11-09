@@ -72,4 +72,4 @@ app.MapSwagger();
 app.MapSwaggerUI();
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();

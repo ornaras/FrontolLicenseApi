@@ -1,32 +1,29 @@
 ﻿using FrontolLicenseApi.Models;
 using FrontolLicenseApi.Models.Response;
 using FrontolLicenseApi.Services;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FrontolLicenseApi.Controllers;
 
 [ApiController]
 [Route("licenses")]
-public sealed class LicensesController : Controller
+public sealed partial class LicensesController : ControllerBase
 {
     [HttpGet]
-    public Results<Ok<GetAllLicensesResponse>, BadRequest<ErrorResponse>> GetAll
-        (ApplicationDbContext ctx, 
-        [FromQuery] int size = 100,
-        [FromQuery] int page = 0,
-        [FromQuery] string[]? types = null)
+    [ProducesResponseType<GetAllLicensesResponse>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ErrorResponse>(StatusCodes.Status400BadRequest)]
+    public IResult GetAllLicenses(ApplicationDbContext ctx, [FromQuery] int size = 100, [FromQuery] int page = 0, [FromQuery] string[]? products = null)
     {
         if (size <= 0 || size > 100)
-            return (BadRequest<ErrorResponse>)Results.BadRequest(new ErrorResponse("Значение size должно находиться в диапазоне от 0 до 100 (включительно)"));
+            return Results.BadRequest(new ErrorResponse("Значение size должно находиться в диапазоне от 0 до 100 (включительно)"));
         if (page < 0)
-            return (BadRequest<ErrorResponse>)Results.BadRequest(new ErrorResponse("Значение page должно быть не отрицательным."));
+            return Results.BadRequest(new ErrorResponse("Значение page должно быть не отрицательным."));
 
         IQueryable<License> licenses = ctx.Licenses;
         if (products is { Length: > 0 } _products)
             licenses = licenses.Where(l => l.Product != null && _products.Contains(l.Product.Id));
 
-        return (Ok<GetAllLicensesResponse>)Results.Ok(new GetAllLicensesResponse
+        return Results.Ok(new GetAllLicensesResponse
         {
             TotalCount = ctx.Licenses.Count(),
             FilteredCount = licenses.Count(),
@@ -36,6 +33,6 @@ public sealed class LicensesController : Controller
         });
     }
 
-    [HttpGet("types")]
-    public IEnumerable<LicenseType> GetTypes(ApplicationDbContext ctx) => ctx.Types;
+    [HttpGet("products")]
+    public IEnumerable<Product> GetProducts(ApplicationDbContext ctx) => ctx.Products;
 }
