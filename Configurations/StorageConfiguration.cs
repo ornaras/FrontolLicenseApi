@@ -2,6 +2,7 @@
 
 public sealed class StorageConfiguration
 {
+    public const string SectionName = "Storage";
     public enum DbType { Sqlite, MySql, Postgres }
 
     public DbType Type { get; set; }

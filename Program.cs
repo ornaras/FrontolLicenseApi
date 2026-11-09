@@ -7,10 +7,10 @@ using Npgsql;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<FrontolConfiguration>(builder.Configuration.GetSection("Frontol"));
+builder.Services.Configure<FrontolConfiguration>(builder.Configuration.GetSection(FrontolConfiguration.SectionName));
 
 var cfgStorage = new StorageConfiguration();
-builder.Configuration.Bind("Storage", cfgStorage);
+builder.Configuration.Bind(StorageConfiguration.SectionName, cfgStorage);
 builder.Services.AddDbContext<ApplicationDbContext>(opts =>
 {
     switch (cfgStorage.Type)
