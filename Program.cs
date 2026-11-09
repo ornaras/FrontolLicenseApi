@@ -21,8 +21,6 @@ builder.Services.AddDbContext<ApplicationDbContext>(opts =>
                 {
                     DataSource = cfgStorage.Database!,
                 };
-                if(cfgStorage.Password is { } passwd)
-                    builder.Password = passwd;
                 opts.UseSqlite(builder.ConnectionString);
                 break;
             }
