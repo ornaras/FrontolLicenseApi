@@ -51,7 +51,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(opts =>
                 opts.UseNpgsql(builder.ConnectionString);
                 break;
             }
-        default: throw new ArgumentOutOfRangeException();
+        default: throw new ArgumentException($"{StorageConfiguration.SectionName}.Type");
     }
 });
 builder.Services.AddControllers();
@@ -59,7 +59,9 @@ builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient(FrontolLicenseFetcher.ClientKey, c =>
 {
+#pragma warning disable S1075
     c.BaseAddress = new Uri("https://lk.frontol.ru");
+#pragma warning restore S1075
 });
 builder.Services.AddHostedService<FrontolLicenseFetcher>();
 

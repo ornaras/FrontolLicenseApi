@@ -4,7 +4,7 @@ public sealed class FrontolConfiguration
 {
     public const string SectionName = "Frontol";
 
-    public string Login { get; set; }
-    public string Password { get; set; }
-    public int PageSize { get; set; }
+    public required string Login { get; set; }
+    public required string Password { get; set; }
+    public int PageSize { get; set; } = 100;
 }

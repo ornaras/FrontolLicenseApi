@@ -3,6 +3,8 @@ using FrontolLicenseApi.Extensions;
 using FrontolLicenseApi.Models;
 using FrontolLicenseApi.Models.Request;
 using FrontolLicenseApi.Models.Response;
+using Microsoft.CodeAnalysis;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.Net.Http.Headers;
 
@@ -32,16 +34,8 @@ public sealed class FrontolLicenseFetcher
                     page = resp.NextPage;
                     foreach (var license in resp.Data)
                     {
-                        Product? product;
-                        var detail = await GetDetailLicenseAsync(client, license.Id, license.Type, token, stoppingToken);
-
-                        product = context.Products.FirstOrDefault(t => t.Id == detail.Data.ProductId);
-                        if (product is null)
-                            context.Products.Add(product = new Product
-                            {
-                                Id = detail.Data.ProductId,
-                                DisplayName = detail.Data.ProductDisplayName
-                            });
+                        var detail = await GetDetailLicenseAsync(client, license.Id, token, stoppingToken);
+                        var product = await GetOrAddProductAsync(context, detail.Data.ProductId, detail.Data.ProductDisplayName, stoppingToken);
 
                         context.UpsertLicense(new License
                         {
@@ -50,46 +44,77 @@ public sealed class FrontolLicenseFetcher
                             ExpiredAt = detail.Data.SubscriptionDate ?? (detail.Data.LeftDays is null ? null : DateOnly.FromDateTime(DateTime.Today.AddDays(detail.Data.LeftDays.Value)))
                         });
 
-                        foreach (var baseFor in detail.Data.BaseFor ?? [])
-                        {
-                            context.UpsertLicense(new License
-                            {
-                                Code = baseFor.LicenseId,
-                                ParentCode = detail.Data.LicenseId,
-                                ParentType = License.LicenseRelationshipType.Converted
-                            });
-                        }
+                        AddBaseLicenses(context, detail.Data.LicenseId, detail.Data.BaseFor);
+                        AddSubscriptions(context, detail.Data.LicenseId, product, detail.Data.Subscriptions);
+                        AddProlongLicenses(context, detail.Data.LicenseId, product, detail.Data.ProlongLicenses);
 
-                        foreach(var prolong in detail.Data.ProlongLicenses ?? [])
-                        {
-                            context.UpsertLicense(new License
-                            {
-                                Code = prolong.LicenseId,
-                                Product = product,
-                                ExpiredAt = DateOnly.FromDateTime(prolong.OperationDateTime.AddDays(prolong.LeftDays)),
-                                ParentCode = detail.Data.LicenseId,
-                                ParentType = License.LicenseRelationshipType.Prolong
-                            });
-                        }
-
-                        foreach(var sub in detail.Data.Subscriptions ?? [])
-                        {
-                            context.UpsertLicense(new License
-                            {
-                                Code = sub.LicenseId,
-                                Product = product,
-                                ExpiredAt = sub.FinalDate,
-                                ParentCode = detail.Data.LicenseId,
-                                ParentType = License.LicenseRelationshipType.Subscription
-                            });
-                        }
-
-                        context.SaveChanges();
+                        await context.SaveChangesAsync(stoppingToken);
                     }
                 } while (page is { });
             }
 
             await Task.Delay(TimeSpan.FromHours(12), stoppingToken);
+        }
+    }
+
+    private static async Task<Product> GetOrAddProductAsync(ApplicationDbContext context, string id, string displayName, CancellationToken ct)
+    {
+        var product = await context.Products.FirstOrDefaultAsync(t => t.Id == id, ct);
+        if (product is null)
+        {
+            product = new Product
+            {
+                Id = id,
+                DisplayName = displayName
+            };
+            context.Products.Add(product);
+        }
+        return product;
+    }
+
+    private static void AddProlongLicenses(ApplicationDbContext context, string parentCode, Product product,
+        FrontolDetailLicenseResponse.FrontolDetailLicense.FrontolProlongLicense[]? array)
+    {
+        foreach (var prolong in array ?? [])
+        {
+            context.UpsertLicense(new License
+            {
+                Code = prolong.LicenseId,
+                Product = product,
+                ExpiredAt = DateOnly.FromDateTime(prolong.OperationDateTime.AddDays(prolong.LeftDays)),
+                ParentCode = parentCode,
+                ParentType = License.LicenseRelationshipType.Prolong
+            });
+        }
+    }
+
+    private static void AddSubscriptions(ApplicationDbContext context, string parentCode, Product product,
+        FrontolDetailLicenseResponse.FrontolDetailLicense.FrontolSubscription[]? array)
+    {
+        foreach (var sub in array ?? [])
+        {
+            context.UpsertLicense(new License
+            {
+                Code = sub.LicenseId,
+                Product = product,
+                ExpiredAt = sub.FinalDate,
+                ParentCode = parentCode,
+                ParentType = License.LicenseRelationshipType.Subscription
+            });
+        }
+    }
+
+    private static void AddBaseLicenses(ApplicationDbContext context, string parentCode, 
+        FrontolDetailLicenseResponse.FrontolDetailLicense.FrontolBaseForItem[]? array)
+    {
+        foreach (var baseFor in array ?? [])
+        {
+            context.UpsertLicense(new License
+            {
+                Code = baseFor.LicenseId,
+                ParentCode = parentCode,
+                ParentType = License.LicenseRelationshipType.Converted
+            });
         }
     }
 
@@ -125,7 +150,7 @@ public sealed class FrontolLicenseFetcher
     }
 
     private static async Task<FrontolDetailLicenseResponse> GetDetailLicenseAsync
-        (HttpClient client, int id, string type, string authToken, CancellationToken ct)
+        (HttpClient client, int id, string authToken, CancellationToken ct)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(authToken);
 

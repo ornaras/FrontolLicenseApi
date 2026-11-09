@@ -4,9 +4,9 @@ public sealed class LocalesConfiguration
 {
     public const string SectionName = "Locales";
 
-    public string LicenseInfoHeader { get; set; }
-    public string LicenseInfoItem { get; set; }
-    public string LicenseStatusNotFound { get; set; }
-    public string LicenseStatusExpired { get; set; }
-    public string LicenseStatusHealthy { get; set; }
+    public required string LicenseInfoHeader { get; set; }
+    public required string LicenseInfoItem { get; set; }
+    public required string LicenseStatusNotFound { get; set; }
+    public required string LicenseStatusExpired { get; set; }
+    public required string LicenseStatusHealthy { get; set; }
 }
